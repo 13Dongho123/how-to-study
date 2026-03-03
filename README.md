@@ -1,5 +1,5 @@
 
-## ✅ README.md 최종본 (그대로 붙여넣기)
+
 
 ````md
 # linuxmaster-dday-planner
