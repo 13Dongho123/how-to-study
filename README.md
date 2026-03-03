@@ -1,7 +1,6 @@
 
 
 
-````md
 # linuxmaster-dday-planner
 
 Flask + MySQL 8 기반 D-day 학습계획/AI 퀴즈/오답복습 웹앱입니다.
