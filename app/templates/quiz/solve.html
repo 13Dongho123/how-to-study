@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<h4>{{ quiz.title or ('퀴즈 #' ~ quiz.id) }}</h4>
+<p class="text-muted">source={{ quiz.source_type }}, scope={{ quiz.scope_mode }}</p>
+<form method="post">
+  {% for q in questions %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <h6>Q{{ loop.index }}. {{ q.question_text }}</h6>
+      {% if q.tags %}
+      <div class="mb-2">
+        {% for t in q.tags %}
+        <span class="badge bg-secondary">{{ t }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if q.type == 'mcq' %}
+        {% for c in q.choices %}
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="q_{{ q.id }}" value="{{ c }}" id="q{{ q.id }}_{{ loop.index }}">
+          <label class="form-check-label" for="q{{ q.id }}_{{ loop.index }}">{{ c }}</label>
+        </div>
+        {% endfor %}
+      {% else %}
+        <input class="form-control" name="q_{{ q.id }}" placeholder="답 입력">
+      {% endif %}
+      <div class="mt-2 small text-muted">해설: {{ q.explanation }}</div>
+    </div>
+  </div>
+  {% endfor %}
+  <button class="btn btn-success">제출 및 채점</button>
+</form>
+{% endblock %}

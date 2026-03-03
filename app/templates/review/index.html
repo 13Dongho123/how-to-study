@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4>오답 노트</h4>
+  <a class="btn btn-primary" href="{{ url_for('review.session') }}">복습 세션 시작</a>
+</div>
+<table class="table table-bordered bg-white">
+  <thead><tr><th>문제</th><th>오답횟수</th><th>최근 오답시각</th><th>상태</th></tr></thead>
+  <tbody>
+    {% for w in wrong_items %}
+    <tr>
+      <td>{{ w.question.question_text if w.question else '-' }}</td>
+      <td>{{ w.wrong_count }}</td>
+      <td>{{ w.last_wrong_at }}</td>
+      <td>{% if w.mastered %}마스터{% else %}미해결{% endif %}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4">미해결 오답이 없습니다.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

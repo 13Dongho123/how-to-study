@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card">
+  <div class="card-body">
+    <h4>퀴즈 생성</h4>
+    <form method="post" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label class="form-label">퀴즈 제목(선택)</label>
+        <input class="form-control" name="title" placeholder="예: 리눅스 권한 집중 퀴즈">
+      </div>
+
+      <label class="form-label">입력 소스 선택</label>
+      <div class="mb-3 d-flex gap-3">
+        <div class="form-check"><input class="form-check-input" type="radio" name="source_type" value="TEXT" checked><label class="form-check-label">텍스트</label></div>
+        <div class="form-check"><input class="form-check-input" type="radio" name="source_type" value="PDF"><label class="form-check-label">PDF</label></div>
+        <div class="form-check"><input class="form-check-input" type="radio" name="source_type" value="URL"><label class="form-check-label">URL(선택)</label></div>
+      </div>
+
+      <div id="textBox" class="mb-3">
+        <label class="form-label">텍스트 입력</label>
+        <textarea class="form-control" name="source_text" rows="8" placeholder="학습 자료를 붙여넣으세요."></textarea>
+      </div>
+
+      <div id="pdfBox" class="mb-3 d-none">
+        <label class="form-label">PDF 업로드 (최대 10MB)</label>
+        <input class="form-control" type="file" name="pdf_file" accept=".pdf">
+      </div>
+
+      <div id="urlBox" class="mb-3 d-none">
+        <label class="form-label">URL 입력 (선택)</label>
+        <input class="form-control" type="url" name="source_url" placeholder="https://...">
+      </div>
+
+      <label class="form-label">출제 범위 모드</label>
+      <div class="mb-3 d-flex gap-3">
+        <div class="form-check"><input class="form-check-input scope-mode" type="radio" name="scope_mode" value="ALL" checked><label class="form-check-label">ALL</label></div>
+        <div class="form-check"><input class="form-check-input scope-mode" type="radio" name="scope_mode" value="SYLLABUS"><label class="form-check-label">SYLLABUS</label></div>
+        <div class="form-check"><input class="form-check-input scope-mode" type="radio" name="scope_mode" value="CUSTOM"><label class="form-check-label">CUSTOM</label></div>
+      </div>
+
+      <div id="syllabusBox" class="border rounded p-3 mb-3 d-none">
+        <label class="form-label">시험 범위 프리셋 토픽</label>
+        <select class="form-select" name="syllabus_topic_id" id="syllabusTopicSelect">
+          <option value="">선택하세요</option>
+          {% for st in syllabus_topics %}
+          <option value="{{ st.id }}">{{ st.name }}</option>
+          {% endfor %}
+        </select>
+        <div class="mt-2" id="keywordList">
+          {% for st in syllabus_topics %}
+            {% for kw in st.keywords %}
+            <div class="form-check keyword-item d-none" data-topic-id="{{ st.id }}">
+              <input class="form-check-input" type="checkbox" name="keyword_ids" value="{{ kw.id }}" id="kw{{ kw.id }}">
+              <label class="form-check-label" for="kw{{ kw.id }}">{{ kw.keyword }}</label>
+            </div>
+            {% endfor %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <div id="customBox" class="mb-3 d-none">
+        <label class="form-label">사용자 키워드 (쉼표 구분)</label>
+        <input class="form-control" name="custom_keywords" placeholder="chmod, chown, inode">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">문항 수</label>
+        <input class="form-control" type="number" name="num_questions" min="1" max="20" value="10">
+      </div>
+
+      <button class="btn btn-primary">퀴즈 생성</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const sourceRadios = document.querySelectorAll('input[name="source_type"]');
+const textBox = document.getElementById('textBox');
+const pdfBox = document.getElementById('pdfBox');
+const urlBox = document.getElementById('urlBox');
+
+function toggleSource() {
+  const selected = document.querySelector('input[name="source_type"]:checked').value;
+  textBox.classList.toggle('d-none', selected !== 'TEXT');
+  pdfBox.classList.toggle('d-none', selected !== 'PDF');
+  urlBox.classList.toggle('d-none', selected !== 'URL');
+}
+sourceRadios.forEach(r => r.addEventListener('change', toggleSource));
+toggleSource();
+
+const scopeRadios = document.querySelectorAll('.scope-mode');
+const syllabusBox = document.getElementById('syllabusBox');
+const customBox = document.getElementById('customBox');
+
+function toggleScope() {
+  const selected = document.querySelector('input[name="scope_mode"]:checked').value;
+  syllabusBox.classList.toggle('d-none', selected !== 'SYLLABUS');
+  customBox.classList.toggle('d-none', selected !== 'CUSTOM');
+}
+scopeRadios.forEach(r => r.addEventListener('change', toggleScope));
+toggleScope();
+
+const topicSelect = document.getElementById('syllabusTopicSelect');
+function filterKeywords() {
+  const topicId = topicSelect.value;
+  document.querySelectorAll('.keyword-item').forEach(el => {
+    el.classList.toggle('d-none', el.dataset.topicId !== topicId);
+  });
+}
+topicSelect.addEventListener('change', filterKeywords);
+filterKeywords();
+</script>
+{% endblock %}

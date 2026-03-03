@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <h5>미해결 오답</h5>
+        <p class="display-6">{{ wrong_count }}</p>
+        <a class="btn btn-outline-primary btn-sm" href="{{ url_for('review.index') }}">오답노트 보기</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-body">
+        <h5>최근 퀴즈</h5>
+        <ul class="list-group">
+          {% for quiz in recent_quizzes %}
+          <li class="list-group-item d-flex justify-content-between">
+            <span>{{ quiz.title or ('퀴즈 #' ~ quiz.id) }} ({{ quiz.scope_mode }})</span>
+            <a href="{{ url_for('quiz.solve_quiz', id=quiz.id) }}">풀기</a>
+          </li>
+          {% else %}
+          <li class="list-group-item">아직 생성된 퀴즈가 없습니다.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-body">
+    <h5>다가오는 학습 일정</h5>
+    <table class="table table-sm">
+      <thead><tr><th>날짜</th><th>주차</th><th>토픽</th><th>분</th></tr></thead>
+      <tbody>
+        {% for p in upcoming_plans %}
+        <tr>
+          <td>{{ p.plan_date }}</td>
+          <td>{{ p.week_no }}</td>
+          <td>{{ p.topic.name if p.topic else '-' }}</td>
+          <td>{{ p.minutes }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4">학습 계획이 없습니다.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

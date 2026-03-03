@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="p-5 mb-4 bg-white rounded-3 border">
+  <h1 class="display-6">LinuxMaster D-Day Planner</h1>
+  <p class="lead">시험일까지 학습계획 생성, 자료 기반 AI 퀴즈, 오답 복습을 한 번에 관리하세요.</p>
+  <a class="btn btn-primary" href="{{ url_for('auth.register') }}">시작하기</a>
+</div>
+{% endblock %}

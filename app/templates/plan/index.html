@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<h4>학습 계획</h4>
+{% for week, rows in grouped.items() %}
+<div class="card mb-3">
+  <div class="card-header">{{ week }}주차</div>
+  <div class="card-body p-0">
+    <table class="table mb-0">
+      <thead><tr><th>날짜</th><th>토픽</th><th>분</th><th>메모</th></tr></thead>
+      <tbody>
+      {% for p in rows %}
+      <tr>
+        <td>{{ p.plan_date }}</td>
+        <td>{{ p.topic.name if p.topic else '-' }}</td>
+        <td>{{ p.minutes }}</td>
+        <td>{{ p.note }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<p>생성된 학습 계획이 없습니다. <a href="{{ url_for('exam.new_exam') }}">시험 설정</a>에서 먼저 생성하세요.</p>
+{% endfor %}
+{% endblock %}

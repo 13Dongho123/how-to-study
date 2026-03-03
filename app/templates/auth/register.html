@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-body">
+        <h4>회원가입</h4>
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label">이메일</label>
+            <input class="form-control" type="email" name="email" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">비밀번호</label>
+            <input class="form-control" type="password" name="password" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">비밀번호 확인</label>
+            <input class="form-control" type="password" name="confirm_password" required>
+          </div>
+          <button class="btn btn-success w-100">회원가입</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
