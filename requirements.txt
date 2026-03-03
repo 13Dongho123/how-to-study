@@ -8,4 +8,4 @@ openai==1.66.3
 PyMuPDF==1.25.3
 requests==2.32.3
 email-validator==2.2.0
-cryptography
+cryptography==42.0.8
