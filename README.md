@@ -8,7 +8,8 @@ Flask + MySQL 8 기반 D-day 학습계획/AI 퀴즈/오답복습 웹앱입니다
 
 ---
 
-<img width="1323" height="1034" alt="image" src="https://github.com/user-attachments/assets/9df03fa8-ac57-41b2-8ca1-f84b6fc2b4ac" />
+<img width="1323" height="1034" alt="image" src="https://github.com/user-attachments/assets/137ee497-2ad0-4659-a1d7-62caf83c4908" />
+
 
 
 ## Why (왜 만들었나)
