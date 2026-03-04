@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4>약점 분석 (미해결 오답 기준)</h4>
+  <form method="get" class="d-flex gap-2">
+    <select class="form-select" name="recent_days">
+      <option value="all" {% if recent_days == 'all' %}selected{% endif %}>전체 기간</option>
+      <option value="7" {% if recent_days == '7' %}selected{% endif %}>최근 7일</option>
+    </select>
+    <button class="btn btn-outline-secondary">적용</button>
+  </form>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-body">
+        <h6>토픽별 미해결 오답 수</h6>
+        <canvas id="barChart" height="120"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-body">
+        <h6>토픽 비중(%)</h6>
+        <canvas id="pieChart" height="120"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-body">
+    <h6>집계 표 (총 {{ total }}건)</h6>
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered mb-0">
+        <thead><tr><th>토픽</th><th>건수</th><th>비중(%)</th></tr></thead>
+        <tbody>
+          {% for row in table_rows %}
+          <tr>
+            <td>{{ row.topic }}</td>
+            <td>{{ row.count }}</td>
+            <td>{{ row.percent }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3">표시할 데이터가 없습니다.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const labels = {{ labels|tojson }};
+const counts = {{ counts|tojson }};
+const percentages = {{ percentages|tojson }};
+
+const barCtx = document.getElementById('barChart');
+new Chart(barCtx, {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [{
+      label: '미해결 오답 수',
+      data: counts,
+      backgroundColor: 'rgba(13, 110, 253, 0.7)',
+      borderColor: 'rgba(13, 110, 253, 1)',
+      borderWidth: 1
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { precision: 0 }
+      }
+    }
+  }
+});
+
+const pieCtx = document.getElementById('pieChart');
+new Chart(pieCtx, {
+  type: 'pie',
+  data: {
+    labels,
+    datasets: [{
+      data: percentages,
+      backgroundColor: [
+        '#0d6efd', '#20c997', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14', '#198754', '#6c757d'
+      ]
+    }]
+  },
+  options: {
+    responsive: true
+  }
+});
+</script>
+{% endblock %}

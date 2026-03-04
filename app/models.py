@@ -2,8 +2,9 @@ from datetime import datetime
 
 from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
-
+from sqlalchemy.dialects.mysql import MEDIUMTEXT
 from app.extensions import db, login_manager
+
 
 
 class User(UserMixin, db.Model):
@@ -20,6 +21,7 @@ class User(UserMixin, db.Model):
     quizzes = db.relationship("Quiz", back_populates="user", cascade="all, delete-orphan")
     attempts = db.relationship("Attempt", back_populates="user", cascade="all, delete-orphan")
     wrong_answers = db.relationship("WrongAnswer", back_populates="user", cascade="all, delete-orphan")
+    review_tasks = db.relationship("ReviewTask", back_populates="user", cascade="all, delete-orphan")
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -87,7 +89,7 @@ class Document(db.Model):
     stored_filename = db.Column(db.String(255), nullable=True)
     file_path = db.Column(db.String(500), nullable=True)
     source_url = db.Column(db.String(500), nullable=True)
-    text_extracted = db.Column(db.Text, nullable=True)
+    text_extracted = db.Column(MEDIUMTEXT, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     user = db.relationship("User", back_populates="documents")
@@ -158,6 +160,7 @@ class Question(db.Model):
         "AttemptAnswer", back_populates="question", cascade="all, delete-orphan"
     )
     wrong_answers = db.relationship("WrongAnswer", back_populates="question")
+    review_tasks = db.relationship("ReviewTask", back_populates="question")
 
 
 class Attempt(db.Model):
@@ -213,4 +216,29 @@ class WrongAnswer(db.Model):
         db.Index(
             "ix_wrong_answers_user_sort", "user_id", "mastered", "wrong_count", "last_wrong_at"
         ),
+    )
+
+
+class ReviewTask(db.Model):
+    __tablename__ = "review_tasks"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    question_id = db.Column(db.Integer, db.ForeignKey("questions.id"), nullable=False, index=True)
+    scheduled_date = db.Column(db.Date, nullable=False, index=True)
+    status = db.Column(db.String(20), nullable=False, default="scheduled", index=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    user = db.relationship("User", back_populates="review_tasks")
+    question = db.relationship("Question", back_populates="review_tasks")
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "user_id",
+            "question_id",
+            "scheduled_date",
+            name="uq_review_task_user_question_date",
+        ),
+        db.Index("ix_review_tasks_user_date", "user_id", "scheduled_date"),
+        db.Index("ix_review_tasks_user_question", "user_id", "question_id"),
     )

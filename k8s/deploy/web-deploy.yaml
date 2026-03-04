@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: planner-web
+  namespace: dh
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: planner
+  template:
+    metadata:
+      labels:
+        app: planner
+    spec:
+      containers:
+      - name: planner
+        image: 13dongho123/linux_docker:v3
+        command: ["python3"]
+        args: ["run.py"]
+        ports:
+        - containerPort: 5000
+        envFrom:
+          - configMapRef:
+              name: flask-config
+
+          - secretRef:
+              name: flask-secret
+
+        resources:
+          requests:
+            cpu: "300m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"

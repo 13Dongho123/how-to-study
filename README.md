@@ -1,6 +1,9 @@
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> 6f34549 (Add Kubernetes deployment files for Flask and MySQL)
 # linuxmaster-dday-planner
 
 Flask + MySQL 8 기반 D-day 학습계획/AI 퀴즈/오답복습 웹앱입니다.
@@ -25,6 +28,7 @@ Flask + MySQL 8 기반 D-day 학습계획/AI 퀴즈/오답복습 웹앱입니다
 - Docs: PDF 업로드 후 PyMuPDF 텍스트 추출
 - Infra: Docker Compose (`web` + `db`)
 
+<<<<<<< HEAD
 ---
 
 ## 2) 디렉터리
@@ -66,6 +70,10 @@ linuxmaster-dday-planner/
 
 ### 1) 환경파일 생성
 
+=======
+## 2) 실행
+1. 환경파일 생성
+>>>>>>> 6f34549 (Add Kubernetes deployment files for Flask and MySQL)
 ```bash
 cp .env.example .env
 # .env 파일을 열고 OPENAI_API_KEY를 실제 값으로 채우세요.
@@ -86,7 +94,10 @@ docker compose exec web sh -c "./scripts/bootstrap.sh"
 ```
 
 수동 실행:
+<<<<<<< HEAD
 
+=======
+>>>>>>> 6f34549 (Add Kubernetes deployment files for Flask and MySQL)
 ```bash
 docker compose exec web flask db init
 docker compose exec web flask db migrate -m "init"
@@ -101,6 +112,7 @@ docker compose exec web flask seed
 
 ---
 
+<<<<<<< HEAD
 ## 4) 주요 라우트
 
 * `/` 대시보드
@@ -154,3 +166,53 @@ git add README.md
 git commit -m "docs: resolve README merge conflict"
 git push
 ````
+=======
+## 3) 주요 라우트
+- `/` 대시보드
+- `/auth/register`, `/auth/login`, `/auth/logout`
+- `/exam/new` 시험 입력 + 계획 생성
+- `/plan` 학습 계획 조회
+- `/quiz/new` 텍스트/PDF/URL(옵션) 퀴즈 생성
+- `/quiz/<id>` 퀴즈 풀이
+- `/review` 오답 리스트/일괄 액션
+- `/review/actions` 오답 액션 처리
+- `/review/session` 오답 복습 세션
+- `/stats` 태그 기반 토픽 약점 통계
+
+## 4) 복습/통계 기능
+### Review 액션
+- 체크박스로 문제 다중 선택
+- `오늘 계획에 추가`: `review_tasks`에 오늘 날짜로 일정 추가
+- `날짜 선택해서 계획에 추가`: 지정 날짜(YYYY-MM-DD)로 일정 추가
+- `완료 처리(숨기기)`: `wrong_answers.mastered=true` 처리
+- `완료 오답 포함해서 보기` 토글 지원
+- 일정 중복 방지: `UNIQUE(user_id, question_id, scheduled_date)`
+
+### Stats(약점 분석)
+- `questions.topic_id` 없이 `tags` 기반 토픽 매핑
+- 규칙:
+  1) tags 항목과 topics.name 정확 일치
+  2) 부분 포함 매칭(양방향) 중 가장 긴 매칭
+  3) 없으면 `기타/미분류`
+- 차트:
+  - 토픽별 미해결 오답 수(bar)
+  - 토픽 비중 %(pie)
+- 표(table)로 count/% 동시 제공
+- `recent_days=7` 필터 지원
+
+## 5) 스키마 변경(신규)
+`review_tasks` 테이블 추가 후 마이그레이션 실행:
+```bash
+docker compose exec web flask db migrate -m "add review_tasks"
+docker compose exec web flask db upgrade
+```
+
+컬럼:
+- `id`, `user_id`, `question_id`, `scheduled_date`, `status`, `created_at`
+- 인덱스: `(user_id, scheduled_date)`, `(user_id, question_id)`
+- 유니크: `(user_id, question_id, scheduled_date)`
+
+## 6) 주의
+- 외부 기출 무단 크롤링 기능은 포함하지 않았습니다.
+- URL 입력은 사용자가 제공한 공개 문서 1건만 최소 fetch합니다.
+>>>>>>> 6f34549 (Add Kubernetes deployment files for Flask and MySQL)

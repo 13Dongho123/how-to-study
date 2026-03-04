@@ -23,12 +23,14 @@ def create_app(config_class=Config):
     from app.blueprints.exam import exam_bp
     from app.blueprints.quiz import quiz_bp
     from app.blueprints.review import review_bp
+    from app.blueprints.stats import stats_bp
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(exam_bp, url_prefix="/exam")
     app.register_blueprint(quiz_bp, url_prefix="/quiz")
     app.register_blueprint(review_bp, url_prefix="/review")
+    app.register_blueprint(stats_bp, url_prefix="/stats")
 
     @app.cli.command("seed")
     def seed_command():

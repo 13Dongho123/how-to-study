@@ -1,6 +1,26 @@
 {% extends 'base.html' %}
 {% block content %}
 <h4>학습 계획</h4>
+<div class="card mb-3">
+  <div class="card-header">오늘 복습 일정</div>
+  <div class="card-body p-0">
+    <table class="table mb-0">
+      <thead><tr><th>유형</th><th>내용</th><th>상태</th></tr></thead>
+      <tbody>
+      {% for task in today_review_tasks %}
+      <tr>
+        <td>[복습]</td>
+        <td>{{ task.question.question_text[:140] if task.question else '-' }}</td>
+        <td>{{ task.status }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="3">오늘 예정된 복습 문제가 없습니다.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
 {% for week, rows in grouped.items() %}
 <div class="card mb-3">
   <div class="card-header">{{ week }}주차</div>

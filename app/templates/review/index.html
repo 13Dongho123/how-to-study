@@ -2,21 +2,87 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h4>오답 노트</h4>
-  <a class="btn btn-primary" href="{{ url_for('review.session') }}">복습 세션 시작</a>
+  <a class="btn btn-outline-primary" href="{{ url_for('review.session') }}">복습 세션 시작</a>
 </div>
-<table class="table table-bordered bg-white">
-  <thead><tr><th>문제</th><th>오답횟수</th><th>최근 오답시각</th><th>상태</th></tr></thead>
-  <tbody>
-    {% for w in wrong_items %}
-    <tr>
-      <td>{{ w.question.question_text if w.question else '-' }}</td>
-      <td>{{ w.wrong_count }}</td>
-      <td>{{ w.last_wrong_at }}</td>
-      <td>{% if w.mastered %}마스터{% else %}미해결{% endif %}</td>
-    </tr>
-    {% else %}
-    <tr><td colspan="4">미해결 오답이 없습니다.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <form method="get" action="{{ url_for('review.index') }}" class="d-flex align-items-center gap-3">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="includeMastered" name="include_mastered" value="1" {% if include_mastered %}checked{% endif %} onchange="this.form.submit()">
+        <label class="form-check-label" for="includeMastered">완료 오답 포함해서 보기</label>
+      </div>
+      <noscript><button class="btn btn-sm btn-secondary">적용</button></noscript>
+    </form>
+  </div>
+</div>
+
+<form method="post" action="{{ url_for('review.actions') }}" id="reviewActionForm">
+  <input type="hidden" name="include_mastered" value="{{ 1 if include_mastered else 0 }}">
+
+  <div class="card mb-3">
+    <div class="card-body d-flex flex-wrap gap-2 align-items-end">
+      <button type="submit" class="btn btn-primary" name="action" value="schedule_today">오늘 계획에 추가</button>
+
+      <div class="d-flex gap-2">
+        <input class="form-control" type="date" name="scheduled_date" value="{{ today }}">
+        <button type="submit" class="btn btn-outline-primary" name="action" value="schedule_date">날짜 선택해서 계획에 추가</button>
+      </div>
+
+      <button type="submit" class="btn btn-success" name="action" value="mark_mastered">완료 처리(숨기기)</button>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-bordered bg-white align-middle">
+      <thead>
+        <tr>
+          <th style="width:42px;"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+          <th>문제</th>
+          <th>태그</th>
+          <th>오답횟수</th>
+          <th>최근 오답시각</th>
+          <th>상태</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for w in wrong_items %}
+        <tr>
+          <td><input class="form-check-input question-check" type="checkbox" name="question_ids" value="{{ w.question_id }}"></td>
+          <td>{{ w.question.question_text[:140] if w.question and w.question.question_text else '-' }}</td>
+          <td>
+            {% if w.question and w.question.tags %}
+              {% if w.question.tags is string %}
+                {{ w.question.tags }}
+              {% else %}
+                {{ w.question.tags|join(', ') }}
+              {% endif %}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td>{{ w.wrong_count }}</td>
+          <td>{{ w.last_wrong_at }}</td>
+          <td>{% if w.mastered %}<span class="badge text-bg-secondary">완료</span>{% else %}<span class="badge text-bg-danger">미해결</span>{% endif %}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">조건에 맞는 오답이 없습니다.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const checkAll = document.getElementById('checkAll');
+if (checkAll) {
+  checkAll.addEventListener('change', function() {
+    document.querySelectorAll('.question-check').forEach(cb => {
+      cb.checked = this.checked;
+    });
+  });
+}
+</script>
 {% endblock %}

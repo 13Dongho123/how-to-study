@@ -67,4 +67,4 @@ def plan():
     for p in plans:
         grouped.setdefault(p.week_no, []).append(p)
 
-    return render_template("plan/index.html", grouped=grouped)
+    return render_template("plan/index.html", grouped=grouped, today_review_tasks=[])

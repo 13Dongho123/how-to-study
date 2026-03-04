@@ -1,7 +1,9 @@
+from datetime import date
+
 from flask import Blueprint, render_template
 from flask_login import current_user, login_required
 
-from app.models import Quiz, StudyPlan, WrongAnswer
+from app.models import Quiz, ReviewTask, StudyPlan, WrongAnswer
 
 main_bp = Blueprint("main", __name__)
 
@@ -46,4 +48,18 @@ def plan_view():
     for p in plans:
         grouped.setdefault(p.week_no, []).append(p)
 
-    return render_template("plan/index.html", grouped=grouped)
+    today_review_tasks = (
+        ReviewTask.query.filter_by(
+            user_id=current_user.id,
+            scheduled_date=date.today(),
+            status="scheduled",
+        )
+        .order_by(ReviewTask.created_at.desc())
+        .all()
+    )
+
+    return render_template(
+        "plan/index.html",
+        grouped=grouped,
+        today_review_tasks=today_review_tasks,
+    )
