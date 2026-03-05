@@ -3,6 +3,37 @@
 Flask + MySQL 8 기반 D-day 학습계획/AI 퀴즈/오답복습 웹앱입니다.
 이 문서는 **EKS/Kubernetes가 아닌 Docker 런처(docker compose / docker run)** 기준 실행 방법을 설명합니다.
 
+## Why (왜 만들었나)
+
+리눅스마스터 및 다른 과목들을 공부하면서 제일 불편했던 건 두 가지였습니다.
+
+1) D-day 기준으로 “오늘 뭘 해야 하는지”가 매일 흔들리는 문제  
+2) 기출/연습 문제를 풀어도 틀린 문제들이 흩어져서, 결국 다시 안 보게 되는 문제
+
+처음엔 노트/엑셀/메모앱으로 일정과 오답을 관리했는데, 시간이 지나면 관리가 깨지고 복습 루틴이 흐트러졌습니다.
+그래서 아예 **시험일을 입력하면 학습 계획을 자동으로 만들고**, 공부 자료(텍스트/PDF)로부터 **퀴즈를 생성해서 반복 학습**하며, **오답을 누적해서 복습 페이지에서 다시 풀 수 있는** 형태로 직접 구현하기로 했습니다.
+
+## 구조
+```
+linuxmaster-dday-planner/
+  app/
+  migrations/
+  scripts/
+  uploads/
+  k8s/
+  deploy/
+    docker/
+      Dockerfile
+      docker-compose.yml
+      docker-compose.override.yml
+      nginx.conf
+      .env.example
+      .dockerignore
+  config.py
+  requirements.txt
+  run.py
+  README.md
+```
 ## 1) 구성
 - `web`: Flask app (`/app`, port `5000`)
 - `db`: MySQL 8 (`3306`)
