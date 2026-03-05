@@ -1,0 +1,28 @@
+# Optional file: Docker Desktop에서 Ingress/Gateway가 준비된 경우에만 적용
+# - Ingress Controller(NGINX 등)가 없으면 이 파일은 적용해도 라우팅이 동작하지 않을 수 있음
+# - Gateway API CRD가 없다면 Gateway/HTTPRoute는 에러가 나므로 이 파일은 건너뛰세요.
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-ingress
+  namespace: linuxmaster
+  labels:
+    app: linuxmaster
+    tier: web
+    env: prod
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "20m"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: linuxmaster.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port:
+                  number: 80

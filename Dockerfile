@@ -2,12 +2,16 @@
 FROM python:3.12-slim AS builder
 WORKDIR /app
 
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
+RUN pip install --upgrade pip && pip wheel --wheel-dir /wheels -r requirements.txt
 
 
 # ---------- runtime ----------
@@ -16,9 +20,11 @@ WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    FLASK_APP=run.py
+    FLASK_APP=run.py \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
 
-# 런타임 최소 의존성 (PyMuPDF 환경에 따라 아래 3개는 필요 없으면 제거 가능)
+# PyMySQL/cryptography + PyMuPDF 런타임 최소 의존성
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     libssl3 \
@@ -28,10 +34,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /wheels /wheels
-RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
+RUN pip install /wheels/* && rm -rf /wheels
 
 COPY . .
-RUN chmod +x /app/scripts/entrypoint.sh
+RUN chmod +x /app/scripts/entrypoint.sh /app/scripts/bootstrap.sh
 
 EXPOSE 5000
-CMD ["/app/scripts/entrypoint.sh"]
+ENTRYPOINT ["/app/scripts/entrypoint.sh"]

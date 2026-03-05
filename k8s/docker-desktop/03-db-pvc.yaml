@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db-pvc
+  namespace: linuxmaster
+  labels:
+    app: linuxmaster
+    tier: db
+    env: prod
+spec:
+  accessModes:
+    - ReadWriteOnce
+  # Docker Desktop 기본 StorageClass(hostpath)를 사용하려고 storageClassName을 명시하지 않음
+  resources:
+    requests:
+      storage: 5Gi

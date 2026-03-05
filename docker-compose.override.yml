@@ -1,0 +1,18 @@
+# Option B: web 2개 + nginx 리버스 프록시(5001)
+# 사용 예시:
+# docker compose -f docker-compose.yml -f docker-compose.override.yml up --build --scale web=2
+services:
+  web:
+    ports: []
+    expose:
+      - "5000"
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - web
+    ports:
+      - "5001:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro

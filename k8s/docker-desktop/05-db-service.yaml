@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  namespace: linuxmaster
+  labels:
+    app: linuxmaster
+    tier: db
+    env: prod
+spec:
+  type: ClusterIP
+  selector:
+    app: linuxmaster
+    tier: db
+    env: prod
+  ports:
+    - name: mysql
+      port: 3306
+      targetPort: 3306

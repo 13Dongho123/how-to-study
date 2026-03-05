@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: linuxmaster-quota
+  namespace: linuxmaster
+  labels:
+    app: linuxmaster
+spec:
+  hard:
+    requests.cpu: "2"
+    requests.memory: 4Gi
+    limits.cpu: "4"
+    limits.memory: 8Gi
+    pods: "10"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: linuxmaster-default-limits
+  namespace: linuxmaster
+  labels:
+    app: linuxmaster
+spec:
+  limits:
+    - type: Container
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
+      default:
+        cpu: 500m
+        memory: 512Mi

@@ -1,0 +1,68 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: web-db-migrate
+  namespace: linuxmaster
+  labels:
+    app: linuxmaster
+    tier: web
+    env: prod
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: linuxmaster
+        tier: web
+        env: prod
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: web-sa
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z db 3306; do
+                echo "waiting for db:3306"
+                sleep 2
+              done
+      containers:
+        - name: migrate
+          image: 13dongho123/linux_docker:v1
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: linuxmaster-web-config
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: linuxmaster-app-secret
+                  key: SECRET_KEY
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: linuxmaster-app-secret
+                  key: OPENAI_API_KEY
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: linuxmaster-app-secret
+                  key: MYSQL_USER
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: linuxmaster-app-secret
+                  key: MYSQL_PASSWORD
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: linuxmaster-app-secret
+                  key: DB_URL
+          command:
+            - sh
+            - -c
+            - flask db upgrade

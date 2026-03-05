@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+  namespace: linuxmaster
+  labels:
+    app: linuxmaster
+    tier: db
+    env: prod
+spec:
+  serviceName: db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: linuxmaster
+      tier: db
+      env: prod
+  template:
+    metadata:
+      labels:
+        app: linuxmaster
+        tier: db
+        env: prod
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3306
+              name: mysql
+          command:
+            - mysqld
+            - --character-set-server=utf8mb4
+            - --collation-server=utf8mb4_unicode_ci
+          env:
+            - name: MYSQL_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: linuxmaster-web-config
+                  key: DB_NAME
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: linuxmaster-app-secret
+                  key: MYSQL_USER
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: linuxmaster-app-secret
+                  key: MYSQL_PASSWORD
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: linuxmaster-app-secret
+                  key: MYSQL_ROOT_PASSWORD
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          volumeMounts:
+            - name: db-storage
+              mountPath: /var/lib/mysql
+          readinessProbe:
+            tcpSocket:
+              port: 3306
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: 3306
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+      volumes:
+        - name: db-storage
+          persistentVolumeClaim:
+            claimName: db-pvc

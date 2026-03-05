@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: linuxmaster-web-config
+  namespace: linuxmaster
+  labels:
+    app: linuxmaster
+    tier: web
+data:
+  FLASK_APP: run.py
+  FLASK_ENV: production
+  OPENAI_MODEL: gpt-4o-mini
+  DB_HOST: db
+  DB_NAME: linuxmaster
+  DB_PORT: "3306"
+  MAX_CONTENT_LENGTH: "20971520"

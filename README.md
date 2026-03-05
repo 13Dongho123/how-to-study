@@ -1,218 +1,141 @@
-<<<<<<< HEAD
-
-
-
-=======
->>>>>>> 6f34549 (Add Kubernetes deployment files for Flask and MySQL)
 # linuxmaster-dday-planner
 
 Flask + MySQL 8 기반 D-day 학습계획/AI 퀴즈/오답복습 웹앱입니다.
-
----
-
-<img width="1323" height="1034" alt="image" src="https://github.com/user-attachments/assets/137ee497-2ad0-4659-a1d7-62caf83c4908" />
-
-
-
-## Why (왜 만들었나)
-리눅스마스터를 준비하면서 가장 힘들었던 건 “오늘 뭘 해야 하는지”와 “틀린 문제를 어떻게 누적해서 복습할지"였습니다.
-단순히 일정표를 적는 수준이 아니라, 시험일(D-day)에 맞춘 계획을 자동으로 생성하고, 공부 자료(텍스트/PDF)로부터 퀴즈를 만들어 반복 학습하며, 오답을 자동 누적해서 복습 루틴을 만들 수 있는 웹앱을 직접 만들어보자는 목표로 시작했습니다.
-
----
+이 문서는 **EKS/Kubernetes가 아닌 Docker 런처(docker compose / docker run)** 기준 실행 방법을 설명합니다.
 
 ## 1) 구성
-- Backend: Flask (Blueprint), SQLAlchemy, Flask-Migrate
-- Auth: Flask-Login
-- DB: MySQL 8
-- AI: OpenAI API (`OPENAI_API_KEY` 없으면 더미 모드)
-- Docs: PDF 업로드 후 PyMuPDF 텍스트 추출
-- Infra: Docker Compose (`web` + `db`)
+- `web`: Flask app (`/app`, port `5000`)
+- `db`: MySQL 8 (`3306`)
+- 기본 실행: `docker compose` (web + db)
+- 스케일링 옵션:
+  - Option A: `docker compose --scale web=2` (단순 동시 실행)
+  - Option B: `web 2개 + nginx reverse proxy` (권장 LB 방식)
 
-<<<<<<< HEAD
----
-
-## 2) 디렉터리
-```text
-linuxmaster-dday-planner/
-  app/
-    __init__.py
-    extensions.py
-    models.py
-    seed.py
-    blueprints/
-      auth.py
-      main.py
-      exam.py
-      quiz.py
-      review.py
-    services/
-      ai.py
-      content.py
-      planning.py
-    templates/
-      base.html
-      ...
-  scripts/
-    entrypoint.sh
-    bootstrap.sh
-  uploads/
-  run.py
-  config.py
-  Dockerfile
-  docker-compose.yml
-  requirements.txt
-  .env.example
-````
-
----
-
-## 3) 실행 방법 (Docker)
-
-### 1) 환경파일 생성
-
-=======
-## 2) 실행
-1. 환경파일 생성
->>>>>>> 6f34549 (Add Kubernetes deployment files for Flask and MySQL)
+## 2) 사전 준비
 ```bash
 cp .env.example .env
-# .env 파일을 열고 OPENAI_API_KEY를 실제 값으로 채우세요.
 ```
 
-### 2) 컨테이너 실행
+`.env`를 열어 다음 값을 실제 환경에 맞게 채우세요.
+- 비민감 Config:
+  - `FLASK_APP`, `FLASK_ENV`, `OPENAI_MODEL`, `DB_HOST`, `DB_PORT`, `DB_NAME`, `MAX_CONTENT_LENGTH`
+- 민감 Secret:
+  - `SECRET_KEY`, `OPENAI_API_KEY`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD`
+
+권장 방식: `.env`에 완성형 `DB_URL` 사용
+```env
+DB_URL=mysql+pymysql://appuser:apppassword@db:3306/linuxmaster?charset=utf8mb4
+```
+
+참고: `DB_URL`이 없으면 `entrypoint.sh`가 `MYSQL_* + DB_*` 값으로 자동 조합합니다.
+
+## 3) 기본 실행 (Option A)
 
 ```bash
 docker compose up --build
 ```
 
-### 3) 마이그레이션 + 시드
+접속:
+- App: [http://localhost:5001](http://localhost:5001)
+- MySQL: `localhost:3307`
 
-권장(부트스트랩 스크립트):
+마이그레이션 적용:
+```bash
+docker compose exec web flask db upgrade
+```
 
+초기 데이터까지 필요하면:
 ```bash
 docker compose exec web sh -c "./scripts/bootstrap.sh"
 ```
 
-수동 실행:
-<<<<<<< HEAD
-
-=======
->>>>>>> 6f34549 (Add Kubernetes deployment files for Flask and MySQL)
+### Option A에서 web 2개 실행
 ```bash
-docker compose exec web flask db init
-docker compose exec web flask db migrate -m "init"
-docker compose exec web flask db upgrade
-docker compose exec web flask seed
+docker compose up --build --scale web=2
 ```
 
-### 4) 접속
+주의: `web` 서비스가 `5001:5000` 포트를 고정 바인딩하면 scale 시 포트 충돌이 납니다.
+실제 로드밸런싱이 필요하면 아래 Option B를 사용하세요.
 
-* App: [http://localhost:5001](http://localhost:5001)
-* MySQL: localhost:3307 (user/pass: `appuser/apppassword`, DB: `linuxmaster`)
+## 4) nginx 리버스프록시 실행 (Option B, 권장)
 
----
-
-<<<<<<< HEAD
-## 4) 주요 라우트
-
-* `/` 대시보드
-* `/auth/register`, `/auth/login`, `/auth/logout`
-* `/exam/new` 시험 입력 + 계획 생성
-* `/plan` 학습 계획 조회
-* `/quiz/new` 텍스트/PDF/URL(옵션) 퀴즈 생성
-* `/quiz/<id>` 퀴즈 풀이
-* `/review` 오답 리스트
-* `/review/session` 오답 복습 세션
-
----
-
-## 5) 구현 포인트
-
-* PDF 업로드 보안
-
-  * `secure_filename`, 확장자 제한(pdf), 10MB 제한
-* 키워드 기반 출제 파이프라인
-
-  * `ALL`: 전체 문맥
-  * `SYLLABUS`/`CUSTOM`: `extract_relevant_passages`로 키워드 주변 문맥 추출
-  * 키워드 매칭 부족 시 fallback(키워드 중심 문제 생성 지시)
-* AI JSON 파싱 실패 대비
-
-  * 스키마 검증 + 최대 3회 재시도
-  * API 키 미설정 시 더미 질문 JSON 반환
-* 오답노트 누적
-
-  * 오답 시 `wrong_count += 1`, `last_wrong_at` 갱신, `mastered=False`
-  * 복습 세션 정답 시 `mastered=True`
-
----
-
-## 6) 주의
-
-* 외부 기출 무단 크롤링 기능은 포함하지 않았습니다.
-* URL 입력은 사용자가 제공한 공개 문서 1건만 최소 fetch하도록 구현되어 있습니다.
-* `.env`는 GitHub에 올리지 않습니다. (`.gitignore`로 제외)
-
-````
-
----
-
-## ✅ 머지 충돌 해결 후 커밋/푸시 명령어
-
-README 저장한 다음:
+`docker-compose.override.yml` + `nginx.conf`가 포함되어 있습니다.
 
 ```bash
-git add README.md
-git commit -m "docs: resolve README merge conflict"
-git push
-````
-=======
-## 3) 주요 라우트
-- `/` 대시보드
-- `/auth/register`, `/auth/login`, `/auth/logout`
-- `/exam/new` 시험 입력 + 계획 생성
-- `/plan` 학습 계획 조회
-- `/quiz/new` 텍스트/PDF/URL(옵션) 퀴즈 생성
-- `/quiz/<id>` 퀴즈 풀이
-- `/review` 오답 리스트/일괄 액션
-- `/review/actions` 오답 액션 처리
-- `/review/session` 오답 복습 세션
-- `/stats` 태그 기반 토픽 약점 통계
+docker compose -f docker-compose.yml -f docker-compose.override.yml up --build --scale web=2
+```
 
-## 4) 복습/통계 기능
-### Review 액션
-- 체크박스로 문제 다중 선택
-- `오늘 계획에 추가`: `review_tasks`에 오늘 날짜로 일정 추가
-- `날짜 선택해서 계획에 추가`: 지정 날짜(YYYY-MM-DD)로 일정 추가
-- `완료 처리(숨기기)`: `wrong_answers.mastered=true` 처리
-- `완료 오답 포함해서 보기` 토글 지원
-- 일정 중복 방지: `UNIQUE(user_id, question_id, scheduled_date)`
+접속:
+- Nginx(LB): [http://localhost:5001](http://localhost:5001)
 
-### Stats(약점 분석)
-- `questions.topic_id` 없이 `tags` 기반 토픽 매핑
-- 규칙:
-  1) tags 항목과 topics.name 정확 일치
-  2) 부분 포함 매칭(양방향) 중 가장 긴 매칭
-  3) 없으면 `기타/미분류`
-- 차트:
-  - 토픽별 미해결 오답 수(bar)
-  - 토픽 비중 %(pie)
-- 표(table)로 count/% 동시 제공
-- `recent_days=7` 필터 지원
+동작 방식:
+- `web` 컨테이너는 내부 포트만 사용 (`expose 5000`)
+- `nginx`만 외부 `5001` 노출
 
-## 5) 스키마 변경(신규)
-`review_tasks` 테이블 추가 후 마이그레이션 실행:
+## 5) docker run 기반 예시 (Option B 대안)
+
 ```bash
-docker compose exec web flask db migrate -m "add review_tasks"
+# 네트워크 생성
+docker network create dday-net
+
+# DB
+docker run -d --name db --network dday-net \
+  -e MYSQL_DATABASE=linuxmaster \
+  -e MYSQL_USER=appuser \
+  -e MYSQL_PASSWORD=apppassword \
+  -e MYSQL_ROOT_PASSWORD=replace-root-password \
+  -v dday_mysql_data:/var/lib/mysql \
+  mysql:8 \
+  mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+# WEB 1/2
+docker run -d --name web1 --network dday-net --env-file .env linuxmaster-dday-planner-web
+docker run -d --name web2 --network dday-net --env-file .env linuxmaster-dday-planner-web
+
+# Nginx
+# nginx.conf의 upstream을 web1/web2로 지정한 별도 설정 사용 가능
+```
+
+## 6) 현재 반영된 이슈 대응
+- `documents.text_extracted`: `MEDIUMTEXT`로 확장 반영됨
+  - 모델: `app/models.py`
+  - 마이그레이션: `migrations/versions/2f87bc9361b1_expand_documents_text_extracted.py`
+- PDF 업로드 제한: 기본 `20MB`
+  - `MAX_CONTENT_LENGTH=20971520`
+- `review_tasks` 테이블 반영됨
+  - 마이그레이션: `migrations/versions/9c1f4f0f4a01_add_review_tasks.py`
+- MySQL 인증/암호화 이슈 대비
+  - `cryptography` 의존성과 런타임 SSL 라이브러리 포함
+
+## 7) 트러블슈팅
+
+### 1) `cryptography` 관련 MySQL 인증 오류
+- 증상: MySQL 접속 시 인증 플러그인/암호화 관련 오류
+- 해결:
+  - 이미지 재빌드: `docker compose build --no-cache web`
+  - `requirements.txt`에 `cryptography` 포함 여부 확인
+
+### 2) `review_tasks` 테이블 없음
+- 증상: `Table '...review_tasks' doesn't exist`
+- 해결:
+```bash
 docker compose exec web flask db upgrade
 ```
 
-컬럼:
-- `id`, `user_id`, `question_id`, `scheduled_date`, `status`, `created_at`
-- 인덱스: `(user_id, scheduled_date)`, `(user_id, question_id)`
-- 유니크: `(user_id, question_id, scheduled_date)`
+### 3) PDF 텍스트 저장 길이 초과
+- 증상: `Data too long for column text_extracted`
+- 해결:
+```bash
+docker compose exec web flask db upgrade
+```
+(`MEDIUMTEXT` 마이그레이션이 적용되어야 함)
 
-## 6) 주의
-- 외부 기출 무단 크롤링 기능은 포함하지 않았습니다.
-- URL 입력은 사용자가 제공한 공개 문서 1건만 최소 fetch합니다.
->>>>>>> 6f34549 (Add Kubernetes deployment files for Flask and MySQL)
+### 4) DB 상태가 꼬였을 때 초기화
+```bash
+docker compose down -v
+docker compose up --build
+```
+
+## 8) 보안
+- `.env`, `.env.*`는 `.gitignore`/`.dockerignore`로 제외되어 Git에 올라가지 않습니다.
+- 실제 키/비밀번호를 코드/README에 넣지 마세요.

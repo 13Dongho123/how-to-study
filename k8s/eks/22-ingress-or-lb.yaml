@@ -1,0 +1,47 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-ingress
+  namespace: linuxmaster
+  labels:
+    app: linuxmaster
+    tier: web
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  ingressClassName: alb
+  rules:
+    - host: dday.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port:
+                  number: 80
+---
+# Optional alternative to Ingress: expose web directly through NLB
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-lb
+  namespace: linuxmaster
+  labels:
+    app: linuxmaster
+    tier: web
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: external
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+spec:
+  type: LoadBalancer
+  selector:
+    app: linuxmaster
+    tier: web
+  ports:
+    - name: http
+      port: 80
+      targetPort: 5000

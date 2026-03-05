@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: linuxmaster
+  labels:
+    app: linuxmaster
+    tier: web
+spec:
+  type: ClusterIP
+  selector:
+    app: linuxmaster
+    tier: web
+  ports:
+    - name: http
+      port: 80
+      targetPort: 5000

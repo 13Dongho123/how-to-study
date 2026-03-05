@@ -3,10 +3,10 @@ services:
     image: mysql:8
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: linuxmaster
-      MYSQL_USER: appuser
-      MYSQL_PASSWORD: apppassword
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
     ports:
       - "3307:3306"
@@ -16,21 +16,25 @@ services:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 12
+      start_period: 20s
 
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
       - .env
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "5001:5000"
+    expose:
+      - "5000"
     volumes:
-      - .:/app
       - ./uploads:/app/uploads
+      # 개발 모드에서만 사용하세요:
+      # - ./:/app
 
 volumes:
   mysql_data:

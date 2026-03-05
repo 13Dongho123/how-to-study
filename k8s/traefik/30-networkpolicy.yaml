@@ -1,0 +1,144 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: linuxmaster
+  labels:
+    app: linuxmaster
+    env: prod
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-db-from-web
+  namespace: linuxmaster
+  labels:
+    app: linuxmaster
+    tier: db
+    env: prod
+spec:
+  podSelector:
+    matchLabels:
+      app: linuxmaster
+      tier: db
+      env: prod
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: linuxmaster
+              tier: web
+              env: prod
+      ports:
+        - protocol: TCP
+          port: 3306
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-web-from-traefik
+  namespace: linuxmaster
+  labels:
+    app: linuxmaster
+    tier: web
+    env: prod
+spec:
+  podSelector:
+    matchLabels:
+      app: linuxmaster
+      tier: web
+      env: prod
+  policyTypes:
+    - Ingress
+  ingress:
+    # Traefik 설치 namespace/label은 환경마다 다를 수 있으므로 필요 시 수정
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+      ports:
+        - protocol: TCP
+          port: 5000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-web-egress-core
+  namespace: linuxmaster
+  labels:
+    app: linuxmaster
+    tier: web
+    env: prod
+spec:
+  podSelector:
+    matchLabels:
+      app: linuxmaster
+      tier: web
+      env: prod
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: linuxmaster
+              tier: db
+              env: prod
+      ports:
+        - protocol: TCP
+          port: 3306
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # OpenAI 같은 외부 API 호출을 위해 443 egress를 허용
+    # 기본 NetworkPolicy만으로는 FQDN 단위 제한이 어려움(CNI 확장 필요)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-db-egress-dns
+  namespace: linuxmaster
+  labels:
+    app: linuxmaster
+    tier: db
+    env: prod
+spec:
+  podSelector:
+    matchLabels:
+      app: linuxmaster
+      tier: db
+      env: prod
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

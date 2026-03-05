@@ -1,0 +1,43 @@
+# Traefik Gateway Controller가 이미 설치되어 있고 GatewayClass "traefik"가 존재한다는 전제
+# (설치 가이드는 답변 본문의 helm 명령 참고)
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: linuxmaster-gateway
+  namespace: linuxmaster
+  labels:
+    app: linuxmaster
+    env: prod
+spec:
+  gatewayClassName: traefik
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      hostname: example.local
+      allowedRoutes:
+        namespaces:
+          from: Same
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: web-route
+  namespace: linuxmaster
+  labels:
+    app: linuxmaster
+    tier: web
+    env: prod
+spec:
+  parentRefs:
+    - name: linuxmaster-gateway
+  hostnames:
+    - example.local
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: web
+          port: 80

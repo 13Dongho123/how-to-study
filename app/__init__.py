@@ -41,6 +41,7 @@ def create_app(config_class=Config):
 
     @app.errorhandler(RequestEntityTooLarge)
     def handle_file_too_large(_error):
-        return "업로드 파일이 너무 큽니다. 최대 10MB까지 허용됩니다.", 413
+        limit_mb = app.config["MAX_CONTENT_LENGTH"] // (1024 * 1024)
+        return f"업로드 파일이 너무 큽니다. 최대 {limit_mb}MB까지 허용됩니다.", 413
 
     return app
