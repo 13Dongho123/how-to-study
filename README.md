@@ -3,6 +3,9 @@
 Flask + MySQL 8 기반 D-day 학습계획/AI 퀴즈/오답복습 웹앱입니다.
 이 문서는 **EKS/Kubernetes가 아닌 Docker 런처(docker compose / docker run)** 기준 실행 방법을 설명합니다.
 
+## 구조도
+<img width="1000" height="1228" alt="image" src="https://github.com/user-attachments/assets/1d7cb0a3-d4a1-4fa1-956c-1593260f81d6" />
+
 ## Why (왜 만들었나)
 
 리눅스마스터 및 다른 과목들을 공부하면서 제일 불편했던 건 두 가지였습니다.
